@@ -1,23 +1,67 @@
 import { useState } from 'react';
 import { Play, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setEmail('');
     setPassword('');
+    setConfirmPassword('');
+    setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(isLogin ? 'Logging in...' : 'Signing up...', { email, password });
-    // Handle auth logic here later
+    setError('');
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+        // Successful login
+        console.log('Logged in successfully');
+      } else {
+        if (password !== confirmPassword) {
+          throw new Error('As senhas não coincidem.');
+        }
+        
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        // Save user profile to Firestore database
+        await setDoc(doc(db, 'users', user.uid), {
+          email: user.email,
+          createdAt: Date.now()
+        });
+        
+        console.log('Account created and saved to database successfully');
+      }
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Este email já está em uso.');
+      } else if (err.code === 'auth/invalid-credential') {
+        setError('Credenciais inválidas.');
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Ocorreu um erro. Tente novamente.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,6 +88,12 @@ export default function Auth() {
         </h1>
         
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {error && (
+            <div className="bg-red-600/20 border border-red-600 text-red-500 px-4 py-3 rounded-lg text-sm font-medium">
+              {error}
+            </div>
+          )}
+
           <div className="relative">
             <input 
               type="email" 
@@ -98,6 +148,8 @@ export default function Auth() {
                 <input 
                   type="password"
                   id="confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="block w-full h-16 px-4 pt-5 pb-1 text-white bg-black/60 border border-white/30 rounded-lg focus:border-red-600 focus:outline-none focus:ring-0 peer transition-all placeholder-transparent"
                   placeholder="Confirmar Senha"
                   required
@@ -114,10 +166,11 @@ export default function Auth() {
 
           <button 
             type="submit"
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-xl uppercase tracking-wider py-4 px-4 rounded-lg mt-2 flex justify-center items-center gap-2 transition-all"
+            disabled={loading}
+            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 disabled:cursor-not-allowed text-white font-bold text-xl uppercase tracking-wider py-4 px-4 rounded-lg mt-2 flex justify-center items-center gap-2 transition-all"
           >
-            {isLogin ? 'Entrar' : 'Vamos Lá'}
-            {isLogin ? null : <ChevronRight className="w-6 h-6" />}
+            {loading ? 'Aguarde...' : isLogin ? 'Entrar' : 'Vamos Lá'}
+            {loading || isLogin ? null : <ChevronRight className="w-6 h-6" />}
           </button>
           
           {isLogin && (
