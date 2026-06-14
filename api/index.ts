@@ -8,26 +8,43 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/movies/search", async (req, res) => {
   try {
-    const apiKey = process.env.TMDB_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: "TMDB_API_KEY is not configured" });
-    }
-    
     const query = req.query.q as string;
     if (!query) {
       return res.status(400).json({ error: "Query parameter 'q' is required" });
     }
 
-    const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=pt-BR&query=${encodeURIComponent(query)}&page=1`);
-    
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`TMDB error: ${response.status} - ${text}`);
+    const apiKey = process.env.TMDB_API_KEY;
+    if (apiKey) {
+      const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=pt-BR&query=${encodeURIComponent(query)}&page=1`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        return res.json(data);
+      } else {
+        console.warn(`TMDB search failed with status ${response.status}. Falling back to Archive.`);
+      }
     }
-    const data = await response.json();
-    res.json(data);
+    
+    // Fallback or secondary source: Archive.org
+    const archiveRes = await fetch(`https://archive.org/advancedsearch.php?q=title:(${encodeURIComponent(query)})+AND+mediatype:(movies)+AND+format:(h.264+OR+MPEG4)&fl[]=identifier,title,description,year,downloads&rows=20&page=1&output=json`);
+    if (archiveRes.ok) {
+      const archiveData = await archiveRes.json();
+      const results = (archiveData.response?.docs || []).map((doc: any) => ({
+        id: `archive_${doc.identifier}`,
+        title: doc.title,
+        overview: doc.description || "Internet Archive movie.",
+        poster_path: `https://archive.org/services/img/${doc.identifier}`,
+        backdrop_path: `https://archive.org/services/img/${doc.identifier}`,
+        release_date: doc.year ? `${doc.year}-01-01` : "",
+        source: 'archive',
+        identifier: doc.identifier
+      }));
+      return res.json({ results });
+    }
+
+    res.json({ results: [] });
   } catch (error: any) {
-    console.error(error);
+    console.error("Search error:", error);
     res.status(500).json({ error: error.message });
   }
 });

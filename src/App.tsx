@@ -57,8 +57,9 @@ export default function App() {
 
   const navButtons = [
     { id: 'inicio', label: 'Início' },
-    { id: 'series', label: 'Séries' },
     { id: 'filmes', label: 'Filmes' },
+    { id: 'series', label: 'Séries' },
+    { id: 'pesquisa', label: 'Pesquisar' },
     { id: 'classicos', label: 'Clássicos' },
     { id: 'bombando', label: 'Bombando' },
     { id: 'minhaLista', label: 'Minha Lista' },
@@ -164,10 +165,11 @@ export default function App() {
             <SettingsView user={user} profile={activeProfile} onUpdateProfile={handleUpdateProfile} />
           ) : (
             <Catalog 
-              activeTab={activeTab === 'pesquisa_mobile' ? 'inicio' : activeTab} 
+              activeTab={activeTab === 'pesquisa_mobile' ? 'pesquisa' : activeTab} 
               searchQuery={searchQuery} 
               user={user} 
               profileId={activeProfile.id} 
+              onSearchQueryChange={setSearchQuery}
             />
           )}
         </main>
@@ -224,10 +226,10 @@ export default function App() {
             </button>
 
             <button 
-              onClick={() => { setActiveTab('pesquisa_mobile'); }}
-              className={`flex flex-col items-center gap-1 py-1 transition-all duration-200 outline-none ${activeTab === 'pesquisa_mobile' ? 'text-red-500 scale-105' : 'text-zinc-400 hover:text-zinc-300'}`}
+              onClick={() => { setActiveTab('pesquisa'); }}
+              className={`flex flex-col items-center gap-1 py-1 transition-all duration-200 outline-none ${activeTab === 'pesquisa' ? 'text-red-500 scale-105' : 'text-zinc-400 hover:text-zinc-300'}`}
             >
-              <Search size={22} className={activeTab === 'pesquisa_mobile' ? 'stroke-[2.5px]' : 'stroke-[2px]'} />
+              <Search size={22} className={activeTab === 'pesquisa' ? 'stroke-[2.5px]' : 'stroke-[2px]'} />
               <span className="text-[10px] font-bold">Pesquisa</span>
             </button>
 

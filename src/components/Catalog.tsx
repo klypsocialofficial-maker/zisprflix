@@ -80,61 +80,52 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
     fetchWatchmodeByGenre();
   }, [selectedGenreId]);
 
+  const [searchLoading, setSearchLoading] = useState(false);
+
   useEffect(() => {
     const fetchSearch = async () => {
         if (!searchQuery.trim()) {
             setSearchResults([]);
+            setSearchLoading(false);
             return;
         }
-        setLoading(true);
+        setSearchLoading(true);
         try {
-            const apiCheck = await fetch('/api/health'); // Just to see if we can use TMDB eventually? 
-            // Better: just fetch from the new movies search endpoint if we want TMDB
             const response = await fetch(`/api/movies/search?q=${encodeURIComponent(searchQuery)}`);
-            if (!response.ok) {
-                // Fallback to archive search if TMDB fails or isn't set up
-                const fallbackResponse = await fetch(`/api/watchmode/search?q=${encodeURIComponent(searchQuery)}`);
-                if (!fallbackResponse.ok) throw new Error('Falha ao buscar filmes');
-                const data = await fallbackResponse.json();
-                
-                const movies: Movie[] = data.results.map((m: any) => ({
-                    id: m.id,
-                    title: m.name,
-                    poster_path: m.image_url,
-                    backdrop_path: m.image_url,
-                    overview: '',
-                    release_date: '',
-                    source: m.source,
-                    identifier: m.identifier
-                }));
-                setSearchResults(movies);
-                return;
-            }
+            if (!response.ok) throw new Error('Falha ao buscar filmes');
             
             const data = await response.json();
             
-            // Map TMDB search data
+            // Map unified search data
             const movies: Movie[] = (data.results || []).map((m: any) => ({
                 id: m.id,
-                title: m.title,
-                poster_path: m.poster_path, 
-                backdrop_path: m.backdrop_path,
-                overview: m.overview,
-                release_date: m.release_date,
+                title: m.title || m.name,
+                poster_path: m.poster_path || m.image_url, 
+                backdrop_path: m.backdrop_path || m.image_url,
+                overview: m.overview || '',
+                release_date: m.release_date || '',
+                source: m.source,
+                identifier: m.identifier
             }));
             setSearchResults(movies);
         } catch (error) {
             console.error(error);
-            setError('Falha ao buscar filmes');
+            // Don't show major error for search, just log it
         } finally {
-            setLoading(false);
+            setSearchLoading(false);
         }
     };
-    if (searchQuery.trim()) {
-        fetchSearch();
-    } else {
-        setLoading(false);
-    }
+
+    const timer = setTimeout(() => {
+        if (searchQuery.trim()) {
+            fetchSearch();
+        } else {
+            setSearchResults([]);
+            setSearchLoading(false);
+        }
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [searchQuery]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
@@ -542,7 +533,7 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
         onClose={() => setPlayingUrl(null)} 
       />
 
-      {activeTab === 'pesquisa_mobile' ? (
+      {activeTab === 'pesquisa' || activeTab === 'pesquisa_mobile' ? (
         <div className="safe-top-padding px-4 sm:px-8 flex flex-col gap-6">
           <div className="relative">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
@@ -569,7 +560,10 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
 
           {searchQuery.trim() ? (
             <div>
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-4">Resultados Encontrados</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Resultados Encontrados</h3>
+                {searchLoading && <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-600"></div>}
+              </div>
               {searchResults.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {searchResults.map((movie) => (
@@ -580,12 +574,13 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
                     />
                   ))}
                 </div>
-              ) : (
+              ) : !searchLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 text-gray-500">
                   <SearchIcon size={48} className="mb-4 opacity-50" />
-                  <p className="text-xl">Nenhum título encontrado.</p>
+                  <p className="text-xl font-medium text-zinc-400">Nenhum título encontrado.</p>
+                  <p className="text-sm">Tente outros termos ou navegue pelos gêneros.</p>
                 </div>
-              )}
+              ) : null}
             </div>
           ) : selectedGenreId !== null ? (
             <div>
@@ -637,9 +632,12 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
         </div>
       ) : searchQuery.trim() ? (
         <div className="pt-28 md:pt-24 px-4 sm:px-8 safe-top-padding">
-          <h2 className="text-2xl font-bold mb-6 text-gray-400">
-            Resultados para: <span className="text-white">"{searchQuery}"</span>
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-400">
+              Resultados para: <span className="text-white">"{searchQuery}"</span>
+            </h2>
+            {searchLoading && <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-red-600"></div>}
+          </div>
           {searchResults.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {searchResults.map((movie) => (
@@ -650,12 +648,13 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
                 />
               ))}
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-              <SearchIcon size={48} className="mb-4 opacity-50" />
-              <p className="text-xl">Nenhum título encontrado.</p>
+          ) : !searchLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 text-gray-500">
+              <SearchIcon size={48} className="mb-4 opacity-40 text-red-600" />
+              <p className="text-xl font-bold text-zinc-400">Nenhum resultado encontrado</p>
+              <p className="text-sm max-w-xs text-center mt-2">Dica: Tente pesquisar pelo nome original em inglês ou use termos mais genéricos.</p>
             </div>
-          )}
+          ) : null}
         </div>
       ) : activeTab === 'minhaLista' ? (
         <div className="pt-28 md:pt-24 px-4 sm:px-8 safe-top-padding">
