@@ -291,6 +291,43 @@ app.get("/api/youtube/channel/:channelId", async (req, res) => {
   }
 });
 
+app.get("/api/movies/classics-pioneers", async (req, res) => {
+  try {
+    const pioneers = [
+      "NightOfTheLivingDead-MPEG",
+      "nosferatu-1922_202504",
+      "TheCabinetOfDr.Caligari",
+      "CarnivalofSouls",
+      "ThePhantomOfTheOpera1925",
+      "dementia_13"
+    ];
+
+    const results = await Promise.all(pioneers.map(async (id) => {
+      try {
+        const metadataRes = await fetch(`https://archive.org/metadata/${id}`);
+        const data = await metadataRes.json();
+        const metadata = data.metadata || {};
+        return {
+          id: `archive_${id}`,
+          title: metadata.title || id,
+          overview: metadata.description || "Obra prima do cinema disponível no Internet Archive.",
+          release_date: metadata.date || metadata.publicdate || "",
+          poster_path: `https://archive.org/services/img/${id}`,
+          backdrop_path: `https://archive.org/services/img/${id}`,
+          source: 'archive',
+          identifier: id
+        };
+      } catch (e) {
+        return null;
+      }
+    }));
+
+    res.json({ results: results.filter(r => r !== null) });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/movies/popular", async (req, res) => {
   try {
     const apiKey = process.env.TMDB_API_KEY;

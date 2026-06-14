@@ -122,7 +122,15 @@ export default function PersistentPlayer({ url, title, onClose }: PersistentPlay
                   </div>
                 )}
                 
-                {activeUrl && activeUrl.includes('.archive.org') ? (
+                {activeUrl && (activeUrl.includes('.archive.org') && activeUrl.includes('/embed/')) ? (
+                  <iframe
+                    src={activeUrl}
+                    className="w-full h-full border-none"
+                    allowFullScreen
+                    onLoad={() => setIsReady(true)}
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                  />
+                ) : activeUrl && activeUrl.includes('.archive.org') ? (
                   <video
                     ref={(el) => {
                       if (el) {

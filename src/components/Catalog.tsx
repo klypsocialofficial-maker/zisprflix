@@ -35,6 +35,7 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
   const [popular, setPopular] = useState<Movie[]>([]);
   const [topRated, setTopRated] = useState<Movie[]>([]);
   const [classics, setClassics] = useState<Movie[]>([]);
+  const [pioneerClassics, setPioneerClassics] = useState<Movie[]>([]);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -168,6 +169,22 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
     setIsLoadingVideo(true);
     try {
       if (movie.source === 'archive' && movie.identifier) {
+        const pioneers = [
+          "NightOfTheLivingDead-MPEG",
+          "nosferatu-1922_202504",
+          "TheCabinetOfDr.Caligari",
+          "CarnivalofSouls",
+          "ThePhantomOfTheOpera1925",
+          "dementia_13"
+        ];
+        
+        if (pioneers.includes(movie.identifier)) {
+          setInlineUrl(`https://archive.org/embed/${movie.identifier}`);
+          setInlinePlaying(true);
+          setIsLoadingVideo(false);
+          return;
+        }
+
         const res = await fetch(`/api/archive/stream/${movie.identifier}`);
         if (res.ok) {
           const data = await res.json();
@@ -229,6 +246,22 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
     setIsLoadingVideo(true);
     try {
       if (movie.source === 'archive' && movie.identifier) {
+        const pioneers = [
+          "NightOfTheLivingDead-MPEG",
+          "nosferatu-1922_202504",
+          "TheCabinetOfDr.Caligari",
+          "CarnivalofSouls",
+          "ThePhantomOfTheOpera1925",
+          "dementia_13"
+        ];
+        
+        if (pioneers.includes(movie.identifier)) {
+          setPlayingUrl(`https://archive.org/embed/${movie.identifier}`);
+          setPlayingTitle(movie.title);
+          setIsLoadingVideo(false);
+          return;
+        }
+
         const res = await fetch(`/api/archive/stream/${movie.identifier}`);
         if (res.ok) {
           const data = await res.json();
@@ -324,6 +357,13 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
         setPopular(movies);
         setTopRated(movies); // Using same list for now
         setClassics(movies);
+
+        // Fetch Pioneers
+        const pioneersRes = await fetch('/api/movies/classics-pioneers');
+        if (pioneersRes.ok) {
+          const pioneersData = await pioneersRes.ok ? await pioneersRes.json() : { results: [] };
+          setPioneerClassics(pioneersData.results || []);
+        }
       } catch (err) {
         console.error(err);
         setError('Falha ao carregar o catálogo.');
@@ -410,23 +450,31 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
               
               <div className="relative h-64 sm:h-[450px] w-full shrink-0">
                 {inlineUrl ? (
-                  <div className="w-full h-full bg-black relative pointer-events-none z-0">
-                    <Player
-                      url={inlineUrl}
-                      playing={inlinePlaying}
-                      muted={true}
-                      loop={true}
-                      controls={false}
-                      width="100%"
-                      height="100%"
-                      style={{ position: 'absolute', top: 0, left: 0, objectFit: 'cover' }}
-                      config={{
-                        youtube: {
-                          playerVars: { showinfo: 0, controls: 0, rel: 0, modestbranding: 1 }
-                        }
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
+                  <div className="w-full h-full bg-black relative z-0">
+                    {inlineUrl.includes('/embed/') ? (
+                      <iframe
+                        src={inlineUrl}
+                        className="w-full h-full border-none"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <Player
+                        url={inlineUrl}
+                        playing={inlinePlaying}
+                        muted={true}
+                        loop={true}
+                        controls={false}
+                        width="100%"
+                        height="100%"
+                        style={{ position: 'absolute', top: 0, left: 0, objectFit: 'cover' }}
+                        config={{
+                          youtube: {
+                            playerVars: { showinfo: 0, controls: 0, rel: 0, modestbranding: 1 }
+                          }
+                        }}
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent pointer-events-none" />
                   </div>
                 ) : (
                   <div 
@@ -682,6 +730,24 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
         </div>
       ) : (
         <div className="pt-28 md:pt-24 px-4 sm:px-8 safe-top-padding">
+          {activeTab === 'inicio' && pioneerClassics.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-tighter flex items-center gap-2">
+                <span className="w-1 h-8 bg-red-600 rounded-full"></span>
+                Obras-Primas: Cinema Clássico
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {pioneerClassics.map((movie) => (
+                  <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    onClick={() => setSelectedMovie(movie)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <h2 className="text-2xl font-bold text-white capitalize">
               {activeTab === 'filmes' ? 'Filmes Populares' : 
