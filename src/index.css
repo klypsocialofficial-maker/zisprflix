@@ -12,4 +12,37 @@ body {
   color: white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent scrolling rubber band bouncing in standard touch views if desired */
+  overscroll-behavior-y: contain;
+}
+
+/* Safe area custom utility classes */
+.safe-top-padding {
+  padding-top: calc(max(1rem, env(safe-area-inset-top)) + 0.25rem);
+}
+
+.safe-navbar-padding {
+  padding-top: calc(max(0.75rem, env(safe-area-inset-top)) + 0.5rem);
+}
+
+.safe-bottom-padding {
+  padding-bottom: calc(max(1.5rem, env(safe-area-inset-bottom)) + 5.5rem);
+}
+
+/* Disable tap highlight colors on touch browsers for buttons and links */
+button,
+a,
+select,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  outline: none !important;
+}
+
+/* Hide scrollbar utility for fluid swiping horizontal elements */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

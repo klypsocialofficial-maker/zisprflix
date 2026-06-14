@@ -28,9 +28,10 @@ interface CatalogProps {
   searchQuery: string;
   user: User;
   profileId: string;
+  onSearchQueryChange?: (query: string) => void;
 }
 
-export default function Catalog({ activeTab, searchQuery, user, profileId }: CatalogProps) {
+export default function Catalog({ activeTab, searchQuery, user, profileId, onSearchQueryChange }: CatalogProps) {
   const [popular, setPopular] = useState<Movie[]>([]);
   const [topRated, setTopRated] = useState<Movie[]>([]);
   const [classics, setClassics] = useState<Movie[]>([]);
@@ -514,8 +515,101 @@ export default function Catalog({ activeTab, searchQuery, user, profileId }: Cat
         onClose={() => setPlayingUrl(null)} 
       />
 
-      {searchQuery.trim() ? (
-        <div className="pt-24 px-4 sm:px-8">
+      {activeTab === 'pesquisa_mobile' ? (
+        <div className="pt-28 px-4 sm:px-8 flex flex-col gap-6">
+          <div className="relative">
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Buscar filmes, clássicos e categorias..."
+              value={searchQuery}
+              onChange={e => {
+                onSearchQueryChange?.(e.target.value);
+                if (selectedGenreId !== null) setSelectedGenreId(null);
+              }}
+              className="w-full bg-zinc-900 border border-white/10 text-white rounded-full py-3.5 pl-11 pr-12 text-sm focus:outline-none focus:border-red-600 transition-all font-medium placeholder-zinc-500 shadow-xl"
+              autoFocus
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => onSearchQueryChange?.('')} 
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {searchQuery.trim() ? (
+            <div>
+              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-4">Resultados Encontrados</h3>
+              {searchResults.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {searchResults.map((movie) => (
+                    <MovieCard
+                      key={movie.id}
+                      movie={movie}
+                      onClick={() => setSelectedMovie(movie)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                  <SearchIcon size={48} className="mb-4 opacity-50" />
+                  <p className="text-xl">Nenhum título encontrado.</p>
+                </div>
+              )}
+            </div>
+          ) : selectedGenreId !== null ? (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white capitalize">
+                  Filmes de {genres.find(g => g.id === selectedGenreId)?.name || 'Gênero'}
+                </h3>
+                <button 
+                  onClick={() => setSelectedGenreId(null)}
+                  className="text-xs text-red-500 font-extrabold hover:underline cursor-pointer border-none bg-transparent"
+                >
+                  Voltar para Categorias
+                </button>
+              </div>
+
+              {watchmodeLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {watchmodeMovies.map((movie) => (
+                    <MovieCard
+                      key={movie.id}
+                      movie={movie}
+                      onClick={() => setSelectedMovie(movie)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-4">Navegar por Gêneros</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-8">
+                {genres.filter(g => g.id !== '').map(g => (
+                  <button
+                    key={g.id}
+                    onClick={() => setSelectedGenreId(g.id)}
+                    className="bg-zinc-900 border border-white/5 py-4 px-5 rounded-2xl text-left text-sm font-extrabold flex items-center justify-between transition-all hover:bg-zinc-800 hover:border-white/10 group cursor-pointer"
+                  >
+                    <span className="group-hover:text-red-500 transition-colors">{g.name}</span>
+                    <span className="text-zinc-600 group-hover:text-red-500 transition-colors">→</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : searchQuery.trim() ? (
+        <div className="pt-28 md:pt-24 px-4 sm:px-8 safe-top-padding">
           <h2 className="text-2xl font-bold mb-6 text-gray-400">
             Resultados para: <span className="text-white">"{searchQuery}"</span>
           </h2>
@@ -537,7 +631,7 @@ export default function Catalog({ activeTab, searchQuery, user, profileId }: Cat
           )}
         </div>
       ) : activeTab === 'minhaLista' ? (
-        <div className="pt-24 px-4 sm:px-8">
+        <div className="pt-28 md:pt-24 px-4 sm:px-8 safe-top-padding">
           <h2 className="text-2xl font-bold mb-6 text-white">Minha Lista</h2>
           {myList.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -556,12 +650,12 @@ export default function Catalog({ activeTab, searchQuery, user, profileId }: Cat
           )}
         </div>
       ) : activeTab === 'series' ? (
-        <div className="pt-32 flex flex-col items-center justify-center text-center h-[60vh]">
+        <div className="pt-32 flex flex-col items-center justify-center text-center h-[60vh] px-4">
             <h1 className="text-5xl font-black text-white mb-4">Séries</h1>
             <p className="text-gray-400 text-xl">Em breve um catálogo completo de séries para você.</p>
         </div>
       ) : (
-        <div className="pt-24 px-4 sm:px-8">
+        <div className="pt-28 md:pt-24 px-4 sm:px-8 safe-top-padding">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <h2 className="text-2xl font-bold text-white capitalize">
               {activeTab === 'filmes' ? 'Filmes Populares' : 

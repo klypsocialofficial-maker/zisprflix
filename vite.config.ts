@@ -12,22 +12,25 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         manifest: {
-          name: 'Watchmode App',
-          short_name: 'Watchmode',
-          description: 'A platform to watch and discover movies',
+          name: 'Zispr - Filmes e Séries',
+          short_name: 'Zispr',
+          description: 'Sua plataforma definitiva para assistir e descobrir grandes títulos do cinema.',
           theme_color: '#000000',
           background_color: '#000000',
           display: 'standalone',
+          orientation: 'portrait',
           icons: [
             {
               src: '/icon.svg',
               sizes: '192x192',
-              type: 'image/svg+xml'
+              type: 'image/svg+xml',
+              purpose: 'any maskable'
             },
             {
               src: '/icon.svg',
               sizes: '512x512',
-              type: 'image/svg+xml'
+              type: 'image/svg+xml',
+              purpose: 'any maskable'
             }
           ]
         }
