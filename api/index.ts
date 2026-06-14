@@ -62,73 +62,59 @@ app.get("/api/watchmode/search", async (req, res) => {
 
 app.get("/api/watchmode/genres", async (req, res) => {
   try {
-    const apiKey = process.env.WATCHMODE_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: "WATCHMODE_API_KEY is not configured" });
+    const apiKey = process.env.TMDB_API_KEY;
+    if (apiKey) {
+      const response = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=pt-BR`);
+      if (response.ok) {
+        const data = await response.json();
+        return res.json(data.genres);
+      }
     }
-    const response = await fetch(`https://api.watchmode.com/v1/genres/?apiKey=${apiKey}`);
-    if (!response.ok) {
-      throw new Error(`Watchmode error: ${response.status}`);
-    }
-    const data = await response.json();
-    res.json(data);
-  } catch (error: any) {
-    console.error("Error fetching watchmode genres:", error);
     const fallbackGenres = [
-      { id: 1, name: "Ação" },
-      { id: 2, name: "Aventura" },
-      { id: 3, name: "Animação" },
-      { id: 4, name: "Comédia" },
-      { id: 5, name: "Crime" },
-      { id: 6, name: "Documentário" },
-      { id: 7, name: "Drama" },
-      { id: 8, name: "Família" },
-      { id: 9, name: "Fantasia" },
-      { id: 11, name: "História" },
-      { id: 12, name: "Terror" },
-      { id: 13, name: "Música" },
-      { id: 14, name: "Musical" },
-      { id: 15, name: "Mistério" },
-      { id: 18, name: "Romance" },
-      { id: 19, name: "Ficção Científica" },
-      { id: 22, name: "Suspense" },
-      { id: 24, name: "Guerra" },
-      { id: 25, name: "Faroeste" }
+      { id: 28, name: "Ação" },
+      { id: 12, name: "Aventura" },
+      { id: 16, name: "Animação" },
+      { id: 35, name: "Comédia" },
+      { id: 80, name: "Crime" },
+      { id: 99, name: "Documentário" },
+      { id: 18, name: "Drama" },
+      { id: 10751, name: "Família" },
+      { id: 14, name: "Fantasia" },
+      { id: 36, name: "História" },
+      { id: 27, name: "Terror" },
+      { id: 10402, name: "Música" },
+      { id: 9648, name: "Mistério" },
+      { id: 10749, name: "Romance" },
+      { id: 878, name: "Ficção Científica" },
+      { id: 53, name: "Suspense" },
+      { id: 10752, name: "Guerra" },
+      { id: 37, name: "Faroeste" }
     ];
     res.json(fallbackGenres);
+  } catch (error: any) {
+    console.error("Error fetching genres:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
 app.get("/api/watchmode/popular", async (req, res) => {
   try {
-    const apiKey = process.env.WATCHMODE_API_KEY;
+    const apiKey = process.env.TMDB_API_KEY;
     const genres = req.query.genres as string;
     
     if (apiKey) {
-        let url = `https://api.watchmode.com/v1/list-titles/?apiKey=${apiKey}&types=movie&sort_by=popularity_desc&limit=20`;
+        let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=pt-BR&sort_by=popularity.desc&page=1`;
         if (genres) {
-            url += `&genres=${genres}`;
+            url += `&with_genres=${genres}`;
         }
         const response = await fetch(url);
         if (response.ok) {
             const data = await response.json();
-            const movies = await Promise.all(data.titles.slice(0, 10).map(async (t: any) => {
-                const detailRes = await fetch(`https://api.watchmode.com/v1/title/${t.id}/details/?apiKey=${apiKey}&append_to_response=poster_path`);
-                const detail = await detailRes.json();
-                return {
-                    id: t.id,
-                    title: t.title,
-                    poster_path: detail.poster,
-                    backdrop_path: detail.backdrop,
-                    overview: detail.plot_overview,
-                    release_date: detail.release_date,
-                    source: 'watchmode'
-                };
-            }));
-            return res.json({ results: movies });
+            return res.json(data);
         }
     }
 
+    // Fallback to archive
     let queryStr = 'collection:(SciFi_Horror+OR+feature_films+OR+comedy_films)+AND+mediatype:(movies)+AND+format:(h.264+OR+MPEG4)';
     if (genres) {
       const genreMap: Record<string, string> = {
@@ -290,6 +276,16 @@ app.get("/api/youtube/channel/:channelId", async (req, res) => {
 
 app.get("/api/movies/popular", async (req, res) => {
   try {
+    const apiKey = process.env.TMDB_API_KEY;
+    if (apiKey) {
+      const response = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=pt-BR&page=1`);
+      if (response.ok) {
+        const data = await response.json();
+        return res.json(data);
+      }
+    }
+
+    // Fallback to Archive
     const response = await fetch(`https://archive.org/advancedsearch.php?q=collection:(SciFi_Horror+OR+feature_films+OR+comedy_films)+AND+mediatype:(movies)+AND+format:(h.264+OR+MPEG4)&fl[]=identifier,title,description,year,downloads&sort[]=downloads+desc&rows=40&page=1&output=json`);
     if (!response.ok) {
       throw new Error(`Archive error: ${response.status}`);

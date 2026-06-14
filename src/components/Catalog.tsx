@@ -88,20 +88,39 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
         }
         setLoading(true);
         try {
-            const response = await fetch(`/api/watchmode/search?q=${encodeURIComponent(searchQuery)}`);
-            if (!response.ok) throw new Error('Falha ao buscar filmes');
+            const apiCheck = await fetch('/api/health'); // Just to see if we can use TMDB eventually? 
+            // Better: just fetch from the new movies search endpoint if we want TMDB
+            const response = await fetch(`/api/movies/search?q=${encodeURIComponent(searchQuery)}`);
+            if (!response.ok) {
+                // Fallback to archive search if TMDB fails or isn't set up
+                const fallbackResponse = await fetch(`/api/watchmode/search?q=${encodeURIComponent(searchQuery)}`);
+                if (!fallbackResponse.ok) throw new Error('Falha ao buscar filmes');
+                const data = await fallbackResponse.json();
+                
+                const movies: Movie[] = data.results.map((m: any) => ({
+                    id: m.id,
+                    title: m.name,
+                    poster_path: m.image_url,
+                    backdrop_path: m.image_url,
+                    overview: '',
+                    release_date: '',
+                    source: m.source,
+                    identifier: m.identifier
+                }));
+                setSearchResults(movies);
+                return;
+            }
+            
             const data = await response.json();
             
-            // Map Watchmode/Archive data to Movie interface
-            const movies: Movie[] = data.results.map((m: any) => ({
+            // Map TMDB search data
+            const movies: Movie[] = (data.results || []).map((m: any) => ({
                 id: m.id,
-                title: m.name,
-                poster_path: m.image_url,
-                backdrop_path: m.image_url,
-                overview: '',
-                release_date: '',
-                source: m.source,
-                identifier: m.identifier
+                title: m.title,
+                poster_path: m.poster_path, 
+                backdrop_path: m.backdrop_path,
+                overview: m.overview,
+                release_date: m.release_date,
             }));
             setSearchResults(movies);
         } catch (error) {
@@ -246,6 +265,14 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
       
       if (movieDoc.exists() && movieDoc.data()?.url) {
         setPlayingUrl(movieDoc.data().url);
+        setPlayingTitle(movie.title);
+        setIsLoadingVideo(false);
+        return;
+      }
+
+      // NEW: Use VidLink for TMDB movies
+      if (typeof movie.id === 'number' || (!String(movie.id).startsWith('archive_') && !String(movie.id).includes('watchmode'))) {
+        setPlayingUrl(`https://vidlink.pro/movie/${movie.id}`);
         setPlayingTitle(movie.title);
         setIsLoadingVideo(false);
         return;

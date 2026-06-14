@@ -163,6 +163,14 @@ export default function PersistentPlayer({ url, title, onClose }: PersistentPlay
                     }}
                     className="w-full h-full object-contain"
                   />
+                ) : activeUrl && activeUrl.includes('vidlink.pro') ? (
+                  <iframe
+                    src={activeUrl}
+                    className="w-full h-full border-none"
+                    allowFullScreen
+                    onLoad={() => setIsReady(true)}
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                  />
                 ) : (
                   <Player
                     ref={playerRef}
@@ -204,7 +212,11 @@ export default function PersistentPlayer({ url, title, onClose }: PersistentPlay
                {isExpanded ? (
                  <div className="flex flex-col h-full text-zinc-400">
                    <p className="text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
-                     Reproduzindo diretamente através do Internet Archive.
+                     {activeUrl?.includes('vidlink.pro') 
+                       ? "Reproduzindo via VidLink Premium." 
+                       : activeUrl?.includes('.archive.org') 
+                         ? "Reproduzindo diretamente através do Internet Archive." 
+                         : "Reproduzindo via Stream."}
                    </p>
 
                    <div className="mt-auto flex flex-wrap items-center gap-2 sm:gap-3">
