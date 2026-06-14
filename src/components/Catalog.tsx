@@ -582,8 +582,8 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
       />
 
       {activeTab === 'pesquisa' || activeTab === 'pesquisa_mobile' ? (
-        <div className="safe-top-padding px-4 sm:px-8 flex flex-col gap-6">
-          <div className="relative">
+        <div className="pt-24 sm:pt-28 px-4 sm:px-8 flex flex-col gap-6 pb-32">
+          <div className="relative z-20">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
             <input 
               type="text" 
@@ -593,7 +593,7 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
                 onSearchQueryChange?.(e.target.value);
                 if (selectedGenreId !== null) setSelectedGenreId(null);
               }}
-              className="w-full bg-zinc-900 border border-white/10 text-white rounded-full py-3.5 pl-11 pr-12 text-sm focus:outline-none focus:border-red-600 transition-all font-medium placeholder-zinc-500 shadow-xl"
+              className="w-full bg-zinc-900 border border-white/10 text-white rounded-xl py-4 pl-11 pr-12 text-base focus:outline-none focus:border-red-600 transition-all font-medium placeholder-zinc-500 shadow-xl"
               autoFocus
             />
             {searchQuery && (
@@ -679,7 +679,7 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
           )}
         </div>
       ) : searchQuery.trim() ? (
-        <div className="pt-28 md:pt-24 px-4 sm:px-8 safe-top-padding">
+        <div className="pt-24 sm:pt-32 px-4 sm:px-8 pb-32">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-400">
               Resultados para: <span className="text-white">"{searchQuery}"</span>

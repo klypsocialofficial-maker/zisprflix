@@ -81,8 +81,10 @@ export default function PersistentPlayer({ url, title, onClose }: PersistentPlay
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className={`fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-white/5 shadow-[0_-10px_50px_rgba(0,0,0,0.8)] transition-all duration-300 ${
-            isExpanded ? 'h-full sm:h-full' : 'h-24 sm:h-28'
+          className={`fixed left-0 right-0 z-[90] bg-black border-t border-white/5 shadow-[0_-10px_50px_rgba(0,0,0,0.8)] transition-all duration-300 ${
+            isExpanded 
+              ? 'h-full inset-0 bottom-0 z-[110]' 
+              : 'bottom-[calc(80px+env(safe-area-inset-bottom,0px))] md:bottom-0 h-24 sm:h-28'
           }`}
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-white/10 cursor-pointer group z-10">
@@ -136,11 +138,14 @@ export default function PersistentPlayer({ url, title, onClose }: PersistentPlay
                       if (el) {
                         playerRef.current = el;
                         el.volume = volume;
-                        if (playing) {
-                          el.play().catch(e => {
-                            if (e.name !== 'AbortError') console.warn('Error playing:', e?.message);
-                          });
-                        } else if (!el.paused) {
+                        if (playing && el.paused) {
+                          const playPromise = el.play();
+                          if (playPromise !== undefined) {
+                            playPromise.catch(e => {
+                              if (e.name !== 'AbortError') console.warn('Error playing:', e?.message);
+                            });
+                          }
+                        } else if (!playing && !el.paused) {
                           el.pause();
                         }
                       }

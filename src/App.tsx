@@ -205,10 +205,9 @@ export default function App() {
 
         {/* Bottom Navigation Bar for Mobile Devices */}
         <div 
-          className="md:hidden fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/10 z-[80] select-none shadow-[0_-10px_30px_rgba(0,0,0,0.8)] backdrop-blur-lg" 
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)', paddingTop: '8px' }}
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/10 z-[80] select-none shadow-[0_-10px_30px_rgba(0,0,0,0.8)] backdrop-blur-lg h-[calc(64px+env(safe-area-inset-bottom,0px))]" 
         >
-          <div className="flex justify-around items-center w-full max-w-lg mx-auto px-4">
+          <div className="flex justify-around items-center w-full max-w-lg mx-auto px-4 h-full" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
             <button 
               onClick={() => { setActiveTab('inicio'); setSearchQuery(''); }}
               className={`flex flex-col items-center gap-1 py-1 transition-all duration-200 outline-none ${activeTab === 'inicio' ? 'text-red-500 scale-105' : 'text-zinc-400 hover:text-zinc-300'}`}

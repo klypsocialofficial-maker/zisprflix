@@ -12,8 +12,8 @@ body {
   color: white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Prevent scrolling rubber band bouncing in standard touch views if desired */
-  overscroll-behavior-y: contain;
+  /* Prevent scrolling rubber band bouncing to stabilize fixed elements */
+  overscroll-behavior: none;
 }
 
 /* Safe area custom utility classes */
