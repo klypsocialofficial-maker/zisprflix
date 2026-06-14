@@ -18,15 +18,16 @@ body {
 
 /* Safe area custom utility classes */
 .safe-top-padding {
-  padding-top: calc(max(1rem, env(safe-area-inset-top)) + 0.25rem);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 7.5rem);
 }
 
 .safe-navbar-padding {
-  padding-top: calc(max(0.75rem, env(safe-area-inset-top)) + 0.5rem);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  padding-bottom: 1rem;
 }
 
 .safe-bottom-padding {
-  padding-bottom: calc(max(1.5rem, env(safe-area-inset-bottom)) + 5.5rem);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem);
 }
 
 /* Disable tap highlight colors on touch browsers for buttons and links */

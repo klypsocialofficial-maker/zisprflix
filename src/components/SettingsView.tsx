@@ -84,7 +84,7 @@ export default function SettingsView({ user, profile, onUpdateProfile }: Props) 
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="pt-24 px-4 sm:px-8 text-white"
+      className="safe-top-padding px-4 sm:px-8 text-white"
     >
       <h1 className="text-3xl font-bold mb-6">Configurações</h1>
       

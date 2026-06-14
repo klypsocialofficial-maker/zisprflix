@@ -516,7 +516,7 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
       />
 
       {activeTab === 'pesquisa_mobile' ? (
-        <div className="pt-28 px-4 sm:px-8 flex flex-col gap-6">
+        <div className="safe-top-padding px-4 sm:px-8 flex flex-col gap-6">
           <div className="relative">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
             <input 
@@ -650,7 +650,7 @@ export default function Catalog({ activeTab, searchQuery, user, profileId, onSea
           )}
         </div>
       ) : activeTab === 'series' ? (
-        <div className="pt-32 flex flex-col items-center justify-center text-center h-[60vh] px-4">
+        <div className="safe-top-padding flex flex-col items-center justify-center text-center h-[60vh] px-4">
             <h1 className="text-5xl font-black text-white mb-4">Séries</h1>
             <p className="text-gray-400 text-xl">Em breve um catálogo completo de séries para você.</p>
         </div>
