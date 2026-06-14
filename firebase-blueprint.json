@@ -16,6 +16,27 @@
         "email",
         "createdAt"
       ]
+    },
+    "Profile": {
+      "title": "Profile",
+      "description": "A viewer profile for the user account",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "avatarUrl": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "avatarUrl",
+        "createdAt"
+      ]
     }
   },
   "firestore": {
@@ -23,7 +44,15 @@
       "schema": {
         "$ref": "#/entities/User"
       },
-      "description": "User profiles"
+      "description": "User profiles",
+      "collections": {
+        "profiles/{profileId}": {
+          "schema": {
+            "$ref": "#/entities/Profile"
+          },
+          "description": "Viewer profiles tied to a user account"
+        }
+      }
     }
   }
 }

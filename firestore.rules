@@ -7,7 +7,6 @@ service cloud.firestore {
 
     function isSignedIn() { return request.auth != null; }
     function isOwner(userId) { return request.auth.uid == userId; }
-    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
 
@@ -15,19 +14,44 @@ service cloud.firestore {
       return data.keys().hasAll(['email', 'createdAt']) &&
              data.keys().size() == 2 &&
              data.email is string && data.email.size() <= 256 &&
-             data.createdAt is number;
+             data.createdAt is timestamp;
+    }
+
+    function isValidProfile(data) {
+      return data.keys().hasAll(['name', 'avatarUrl', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 50 &&
+             data.avatarUrl is string && data.avatarUrl.size() <= 1024 &&
+             data.createdAt is timestamp;
     }
 
     match /users/{userId} {
-      allow read: if isSignedIn() && isOwner(userId) && isValidId(userId);
-      allow create: if isSignedIn() && isOwner(userId) && isValidId(userId) && 
+      allow read: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && 
                     isValidUser(incoming()) && 
-                    incoming().createdAt == request.time.toMillis();
-      allow update: if isSignedIn() && isOwner(userId) && isValidId(userId) &&
+                    incoming().createdAt == request.time;
+      allow update: if isSignedIn() && isOwner(userId) &&
                     isValidUser(incoming()) &&
                     incoming().diff(existing()).affectedKeys().hasOnly(['email']) &&
                     incoming().createdAt == existing().createdAt;
       allow delete: if false;
+
+      match /profiles/{profileId} {
+        allow read: if isSignedIn() && isOwner(userId);
+        allow create: if isSignedIn() && isOwner(userId) &&
+                      isValidProfile(incoming()) && 
+                      incoming().createdAt == request.time;
+        allow update: if isSignedIn() && isOwner(userId);
+        allow delete: if isSignedIn() && isOwner(userId);
+
+        match /myList/{movieId} {
+          allow read, write: if isSignedIn() && isOwner(userId);
+        }
+      }
+    }
+    match /movie_videos/{movieId} {
+      allow read: if true;
+      allow write: if true;
     }
   }
 }
+

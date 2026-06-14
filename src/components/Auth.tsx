@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Play, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
 export default function Auth() {
@@ -43,7 +43,7 @@ export default function Auth() {
         // Save user profile to Firestore database
         await setDoc(doc(db, 'users', user.uid), {
           email: user.email,
-          createdAt: Date.now()
+          createdAt: serverTimestamp()
         });
         
         console.log('Account created and saved to database successfully');
